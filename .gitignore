@@ -1,2 +1,4 @@
 config.py
 __pycache__/*
+api_cache.sqlite
+exchange_rate_cache.sqlite

@@ -1,7 +1,11 @@
 import requests as rq # For site requests
+import requests_cache # For save cash
+import threading # For cash too
 import os # To clean console
 import time as t # To sleep function
 from config import API_KEY # Import API key
+
+requests_cache.install_cache('exchange_rate_cache', expire_after=1860) # Set cache saving to 31 minutes
 
 def clearConsole():
     os.system('cls')
@@ -93,7 +97,7 @@ def currencyCalculator():
             ammount = ammount * difference
             ammount = str(ammount)[:4]
             print(f'Summ in {currencyTwo}: {ammount}')
-            successfulCompletion = False
+            # successfulCompletion = False
             pressEnter = input('\nPress Enter to go to the main menu '), clearConsole, mainMenu() 
         except ValueError:
             print('Incorrect input! Try again!'), t.sleep(4), clearConsole(), currencyCalculator()
@@ -123,3 +127,34 @@ def CompareCourseToCourse(currencyOne, currencyTwo):
             print(f"Incorrect currency name, please check if you have made a typo. Your input: '{currencyOne}'/'{currencyTwo}'."), t.sleep(5), EnterNameTwoCurrencies()
     else:
         print(f"Error! Perhaps you entered the currency name incorrectly. Your input: '{currencyOne}'/'{currencyTwo}'"), t.sleep(5), EnterNameTwoCurrencies()
+
+#for cash
+def fetch_exchange_rate(currency): 
+    url = f"https://v6.exchangerate-api.com/v6/{API_KEY}/latest/{currency}"
+    response = rq.get(url)
+    if response.status_code == 200:
+        return response.json()['conversion_rates']
+    else:
+        response.raise_for_status()
+def fetch_available_currencies(): 
+    url = f"https://v6.exchangerate-api.com/v6/{API_KEY}/codes"
+    response = rq.get(url)
+    if response.status_code == 200:
+        return response.json()['supported_codes']
+    else:
+        response.raise_for_status()
+def update_cache():
+    while True:
+        available_currencies = fetch_available_currencies()
+
+        for currency in available_currencies:
+            currency_code = currency[0]
+            try:
+                fetch_exchange_rate(currency_code)
+            except Exception as e:
+                pass
+
+        t.sleep(1800)
+def beginWorkWithCash():
+    cache_thread = threading.Thread(target=update_cache, daemon=True)
+    cache_thread.start()

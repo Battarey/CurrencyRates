@@ -1,3 +1,4 @@
 import functions as f
 
-f.currencyCalculator()
+f.clearConsole()
+f.mainMenu()
